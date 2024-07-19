@@ -69,7 +69,7 @@ if [ ${flg_Install} -eq 1 ] && [ ${flg_Restore} -eq 1 ]; then
 
 EOF
 
-    "${scrDir}/install_pre.sh"
+    sudo -u $SUDO_USER "${scrDir}/install_pre.sh"
 fi
 
 #------------#
