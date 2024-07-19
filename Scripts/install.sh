@@ -138,7 +138,7 @@ EOF
     #--------------------------------#
     # install packages from the list #
     #--------------------------------#
-    "${scrDir}/install_pkg.sh" "${scrDir}/install_pkg.lst"
+    sudo -u $SUDO_USER "${scrDir}/install_pkg.sh" "${scrDir}/install_pkg.lst"
     rm "${scrDir}/install_pkg.lst"
 fi
 
@@ -156,8 +156,8 @@ if [ ${flg_Restore} -eq 1 ]; then
 
 EOF
 
-    "${scrDir}/restore_fnt.sh"
-    "${scrDir}/restore_cfg.sh"
+    sudo -u $SUDO_USER "${scrDir}/restore_fnt.sh"
+    sudo -u $SUDO_USER "${scrDir}/restore_cfg.sh"
     echo -e "\n\033[0;32m[themepatcher]\033[0m Patching themes..."
     while IFS='"' read -r null1 themeName null2 themeRepo
     do
@@ -167,11 +167,11 @@ EOF
         [ -d "${themePath}" ] || mkdir -p "${themePath}"
         [ -f "${themePath}/.sort" ] || echo "${#themeNameQ[@]}" > "${themePath}/.sort"
     done < "${scrDir}/themepatcher.lst"
-    parallel --bar --link "${scrDir}/themepatcher.sh" "{1}" "{2}" "{3}" "{4}" ::: "${themeNameQ[@]}" ::: "${themeRepoQ[@]}" ::: "--skipcaching" ::: "false"
+    parallel --bar --link sudo -u $SUDO_USER "${scrDir}/themepatcher.sh" "{1}" "{2}" "{3}" "{4}" ::: "${themeNameQ[@]}" ::: "${themeRepoQ[@]}" ::: "--skipcaching" ::: "false"
     echo -e "\n\033[0;32m[cache]\033[0m generating cache files..."
-    "$HOME/.local/share/bin/swwwallcache.sh" -t ""
+    sudo -u $SUDO_USER "$HOME/.local/share/bin/swwwallcache.sh" -t ""
     if printenv HYPRLAND_INSTANCE_SIGNATURE &> /dev/null; then
-        "$HOME/.local/share/bin/themeswitch.sh" &> /dev/null
+        sudo -u $SUDO_USER "$HOME/.local/share/bin/themeswitch.sh" &> /dev/null
     fi
 fi
 
@@ -189,7 +189,7 @@ if [ ${flg_Install} -eq 1 ] && [ ${flg_Restore} -eq 1 ]; then
 
 EOF
 
-    "${scrDir}/install_pst.sh"
+    sudo -u $SUDO_USER "${scrDir}/install_pst.sh"
 fi
 
 #------------------------#
