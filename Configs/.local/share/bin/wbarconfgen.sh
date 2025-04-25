@@ -48,6 +48,17 @@ fi
 export set_sysname=`hostnamectl hostname`
 export w_position=`grep '^1|' $conf_ctl | cut -d '|' -f 3`
 
+# setting explicit waybar output
+
+if [ ${#waybar_output[@]} -gt 0 ]; then
+w_output=$(printf '"%s", ' "${waybar_output[@]}")
+w_output=${w_output%, }  # Remove the trailing comma and space
+echo "[outputs] $w_output"
+fi
+export w_output="${w_output:-\"*\"}"
+
+# setting waybar position
+
 case ${w_position} in
     left) export hv_pos="width" ; export r_deg=90 ;;
     right) export hv_pos="width" ; export r_deg=270 ;;
@@ -65,10 +76,17 @@ if [ $i_size -lt 12 ] ; then
     export i_size="12"
 fi
 
-export i_theme="$(grep 'gsettings set org.gnome.desktop.interface icon-theme' "${hydeThemeDir}/hypr.theme" | awk -F "'" '{print $((NF - 1))}')"
+export i_theme="$(
+{ grep -q "^[[:space:]]*\$ICON[-_]THEME\s*=" "${hydeThemeDir}/hypr.theme" && grep "^[[:space:]]*\$ICON[-_]THEME\s*=" "${hydeThemeDir}/hypr.theme" | cut -d '=' -f2 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' ;} ||
+grep 'gsettings set org.gnome.desktop.interface icon-theme' "${hydeThemeDir}/hypr.theme" | awk -F "'" '{print $((NF - 1))}'
+)"
 export i_task=$(( w_height*6/10 ))
 if [ $i_task -lt 16 ] ; then
     export i_task="16"
+fi
+export i_priv=$(( w_height*6/13 ))
+if [ $i_priv -lt 12 ] ; then
+    export i_priv="12"
 fi
 
 envsubst < $modules_dir/header.jsonc > $conf_file
@@ -107,7 +125,7 @@ gen_mod right 6
 # copy modules/*.jsonc to the config
 
 echo -e "\n\n// sourced from modules based on config.ctl //\n" >> $conf_file
-echo "$write_mod" | sed 's/","/\n/g ; s/ /\n/g' | awk -F '/' '{print $NF}' | awk -F '#' '{print $1}' | awk '!x[$0]++' | while read mod_cpy
+echo "$write_mod" | sed 's/","/\n/g ; s/ /\n/g' | awk -F '/' '{print $NF}' | awk -F '#' '{print}' | awk '!x[$0]++' | while read mod_cpy
 do
     if [ -f $modules_dir/$mod_cpy.jsonc ] ; then
         envsubst < $modules_dir/$mod_cpy.jsonc >> $conf_file
@@ -128,4 +146,3 @@ if [ "$reload_flag" == "1" ] ; then
     killall waybar
     waybar --config ${waybar_dir}/config.jsonc --style ${waybar_dir}/style.css > /dev/null 2>&1 &
 fi
-
